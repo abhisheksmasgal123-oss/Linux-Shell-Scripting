@@ -1,0 +1,45 @@
+#!/bin/bash
+
+#################################
+
+# Unused EBS volume Audit report
+#Author : Abhishek
+
+#################################
+
+Threshold=30
+staleebsvoulmes="unusedebs.csv"
+
+echo "voulmeId,Size(GB),AZ,Age(Days) > "$staleebsvolumes"
+
+Total_Size=0
+
+echo "scanning for unused EBS Volumes"
+echo ""
+
+Volumes=$(aws ec2 describe-Volumes --filters Name=status,Values=available \
+          --query 'Volumes[*].[VolumeId,Size,AvailabilityZone,CreatedTime]' --utput -text)
+
+while read Vol_ID , Size, AZ, CREATE_TIME 
+do 
+
+      CREATE_EPOCH=$(date -d "$CREATE_TIME" +%s)
+      CURRENT_EPOCH=$(date +%s)
+
+      AGE_DAYS=$(( (CURRENT_EPOCH - CREATE_EPOCH) / 86400) )
+
+      if [ "$AGE_DAYS" -ge "$Threshold"]
+      then 
+            echo "Unused Volume Found"
+            echo "VolumeID : $Vol_Id
+            echo "Size : $Size"
+            echo "AZ : $AZ"
+
+            echo "$Vol_Id,$Size,$AZ,$$Age_days" >> "$stablevolumes"
+
+     Total_Size=$((Total_Size + SIZE))
+
+fi 
+
+echo "Audit completed "
+
